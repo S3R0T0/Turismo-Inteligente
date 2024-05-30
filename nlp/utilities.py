@@ -2,7 +2,6 @@ import spacy
 from spacy.matcher import Matcher
 
 nlp = spacy.load("es_core_news_lg")
-doc = nlp("dame los 10 mas populares en un grafico hoteles y playas de santo domingo")
 
 paisPatterns = [[{"TEXT": {"REGEX": "(?=.*pais)|(?=.*isla)"}}],
                 [{"TEXT": {"REGEX": "(?=.*republica)|(?=.*dominicana)"}, "OP": "+"}],
@@ -32,17 +31,18 @@ matcher.add("turista", turista, greedy="LONGEST")
 matcher.add("nacionalidad", nacionalidad, greedy="LONGEST")
 
 
-def process():
+def process(text):
+
+    doc = nlp(text)
     matches = matcher(doc)
     matches.sort(key=lambda x: x[1])
 
     elementos = []
 
     last = ""
-    print("AAA")
     for i in matches:
         if nlp.vocab[i[0]].text == "request" and not (last == "request"):
-            elementos.append({"request": [doc[i[1]:i[2]].text], "sitios": [], "provincias": [], "nacionalidad": []})
+            elementos.append({"request": [doc[i[1]:i[2]].text], "sitios": [], "provincias": [], "nacionalidad": [],"elPais":[],"turista":[]})
         else:
             for e in elementos:
                 e[nlp.vocab[i[0]].text].append(doc[i[1]:i[2]].text)
@@ -50,3 +50,8 @@ def process():
 
     return elementos
 
+def listTop(nlpRequest):
+    return "a"
+
+def createGraph(nlpRequest):
+    return "a"

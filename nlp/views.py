@@ -7,5 +7,6 @@ def homePage(request):
     return render(request,"index.html")
 
 def nlpRequest(request):
-    print(utilities.process())
-    return JsonResponse({"nlpResponse": "hola mundo"})
+    intput = request.GET.get("nlp_request")
+
+    return JsonResponse({"nlpResponse": str(utilities.process(intput))})

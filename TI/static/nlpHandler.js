@@ -21,7 +21,7 @@ mainForm.addEventListener("submit",async (event)=>{
 
     addMsgToChat(userInput.value,"chatMsg")
 
-    let request = await fetch(mainForm.action)
+    let request = await fetch(mainForm.action+`?nlp_request=${userInput.value}`)
     let response = await request.json()
     let nlpMsg = response.nlpResponse
     
