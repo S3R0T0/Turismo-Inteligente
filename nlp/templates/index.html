@@ -1,16 +1,19 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+     <link rel="stylesheet" href="{% static 'indexStyke.css' %}">
     <title>Home</title>
 </head>
 <body>
+<h1>Turismo Inteligente</h1>
 <div id="chat"></div>
 <form action="{% url 'nlpRequest' %}">
     <input type="text" name="nlp_request" id="nlp_request">
     <input type="submit" id="submitBtn">
 </form>
-{% load static %}
+
 <script src="{% static 'nlpHandler.js' %}"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ const chat = document.getElementById("chat")
 const addMsgToChat = function(text){
 
     newMsg = document.createElement("h1")
-    newMsg.class = "chatMsg"
+    newMsg.classList.add("chatMsg")
     newMsg.textContent = text
 
     chat.appendChild(newMsg)

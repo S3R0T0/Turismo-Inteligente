@@ -1,11 +1,13 @@
 const mainForm =  document.querySelector("form")
 const userInput = document.getElementById("nlp_request")
 const chat = document.getElementById("chat")
+console.log("A")
+const addMsgToChat = function(text,cls){
 
-const addMsgToChat = function(text){
+    console.log("ee")
 
     newMsg = document.createElement("h1")
-    newMsg.class = "chatMsg"
+    newMsg.classList.add(cls)
     newMsg.textContent = text
 
     chat.appendChild(newMsg)
@@ -17,11 +19,11 @@ mainForm.addEventListener("submit",async (event)=>{
     
     if(userInput.value == "") return
 
-    addMsgToChat(userInput.value)
+    addMsgToChat(userInput.value,"chatMsg")
 
     let request = await fetch(mainForm.action)
     let response = await request.json()
     let nlpMsg = response.nlpResponse
     
-    addMsgToChat(nlpMsg)
+    addMsgToChat(nlpMsg,"chatResponse")
 })
