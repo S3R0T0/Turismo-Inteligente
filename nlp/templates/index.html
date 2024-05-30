@@ -5,9 +5,12 @@
     <title>Home</title>
 </head>
 <body>
+<div id="chat"></div>
 <form action="{% url 'nlpRequest' %}">
     <input type="text" name="nlp_request" id="nlp_request">
     <input type="submit" id="submitBtn">
 </form>
+{% load static %}
+<script src="{% static 'nlpHandler.js' %}"></script>
 </body>
 </html>
