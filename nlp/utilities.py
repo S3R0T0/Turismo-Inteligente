@@ -1,5 +1,7 @@
 import spacy
+from django.db import connection
 from spacy.matcher import Matcher
+
 
 nlp = spacy.load("es_core_news_lg")
 
@@ -50,8 +52,24 @@ def process(text):
 
     return elementos
 
+
+def query(query):
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        return cursor.fetchall()
+
 def listTop(nlpRequest):
-    return "a"
+    listSize = 10
+    year = 2023
+    month = ""
+    extranjeros = ""
+    infoTable = "visitantes"
+    result = query(f"select sum(personas) as total,aereopuerto from {infoTable} where Y = {year} {month} {extranjeros} group by aereopuerto order by total desc")
+    nlpResponse = "Aqui la cantidad de visitantes en los aereopuertos princiaples:\n"
+    for index,item in enumerate(result):
+        nlpResponse += f"\n{index+1}. {item[1].title()} con {int(item[0])} visitantes"
+    return nlpResponse
 
 def createGraph(nlpRequest):
+
     return "a"

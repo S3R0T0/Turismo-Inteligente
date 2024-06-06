@@ -10,9 +10,11 @@ body {
 }
 
 #chat {
+    white-space: pre-wrap;
+    font-family: monospace;
     width: 80%;
-    max-width: 600px;
-    height: 300px;
+    max-width: 1200px;
+    height: 500px;
     background-color: #181D27;
     border: 1px solid #181D27;
     border-radius: 5px;
