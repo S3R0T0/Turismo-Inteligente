@@ -2,10 +2,9 @@ import spacy
 from django.db import connection
 from spacy.matcher import Matcher
 
+nlp = spacy.load("ner_model")
 
-nlp = spacy.load("es_core_news_lg")
-
-paisPatterns = [[{"TEXT": {"REGEX": "(?=.*pais)|(?=.*isla)"}}],
+"""paisPatterns = [[{"TEXT": {"REGEX": "(?=.*pais)|(?=.*isla)"}}],
                 [{"TEXT": {"REGEX": "(?=.*republica)|(?=.*dominicana)"}, "OP": "+"}],
                 [{"TEXT": {"REGEX": "(?i)rd"}, "OP": "+"}]]
 
@@ -30,11 +29,16 @@ matcher.add("provincia", provPatterns, greedy="LONGEST")
 matcher.add("sitios", sitiosPatterns, greedy="LONGEST")
 matcher.add("request", requestPatter, greedy="LONGEST")
 matcher.add("turista", turista, greedy="LONGEST")
-matcher.add("nacionalidad", nacionalidad, greedy="LONGEST")
+matcher.add("nacionalidad", nacionalidad, greedy="LONGEST")"""
 
 
 def process(text):
-
+    doc = nlp(text)
+    request = []
+    for ent in doc.ents:
+        print(ent,ent.label_)
+    return None
+'''
     doc = nlp(text)
     matches = matcher(doc)
     matches.sort(key=lambda x: x[1])
@@ -44,13 +48,15 @@ def process(text):
     last = ""
     for i in matches:
         if nlp.vocab[i[0]].text == "request" and not (last == "request"):
-            elementos.append({"request": [doc[i[1]:i[2]].text], "sitios": [], "provincias": [], "nacionalidad": [],"elPais":[],"turista":[]})
+            elementos.append(
+                {"request": [doc[i[1]:i[2]].text], "sitios": [], "provincias": [], "nacionalidad": [], "elPais": [],
+                 "turista": []})
         else:
             for e in elementos:
                 e[nlp.vocab[i[0]].text].append(doc[i[1]:i[2]].text)
         last = nlp.vocab[i[0]].text
+    return "elementos"'''
 
-    return elementos
 
 
 def query(query):
