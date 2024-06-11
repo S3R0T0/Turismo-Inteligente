@@ -96,5 +96,10 @@ def listTop(nlpRequest):
     return nlpResponse
 
 def createGraph(nlpRequest):
-
+    table = "visitantes"
+    year = ""
+    queryMsg = f"select * from {table} where Y = 2000"
+    result = query(queryMsg)
+    for index, item in enumerate(result):
+        print(item)
     return "a"

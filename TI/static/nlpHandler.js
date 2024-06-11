@@ -63,7 +63,7 @@ mainForm.addEventListener("submit",async (event)=>{
     let response = await request.json()
     let nlpMsg = response.nlpResponse
     console.log(nlpMsg)
-    createChart([1,2,3,4,5,6,7,8],["a","a","a","a","a","a","a","a"])
+    createChart([1,2,2,3,4,5,6,7,8],["a","a","a","a","a","a","a","a"])
     //addMsgToChat(nlpMsg,"chatResponse")
 
     chat.scrollTo({

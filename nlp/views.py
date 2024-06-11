@@ -9,6 +9,7 @@ def homePage(request):
 def nlpRequest(request):
     intput = request.GET.get("nlp_request")
     print(utilities.process(intput))
-    nlpResponse = utilities.listTop("")
-    print(nlpResponse)
-    return JsonResponse({"nlpResponse": nlpResponse})
+    #nlpResponse = utilities.listTop("")
+    utilities.createGraph("")
+    #print(nlpResponse)
+    return JsonResponse({"nlpResponse": "nlpResponse"})
