@@ -2,7 +2,14 @@ import spacy
 from django.db import connection
 from spacy.matcher import Matcher
 
-nlp = spacy.load("ner_model")
+nlp = spacy.load("Models/ner_model")
+nlp_request = spacy.load("Models/request_ner")
+nlp_residencia = spacy.load("Models/residencia_ner")
+nlp_place = spacy.load("Models/place_ner")
+#nlp_people = spacy.load("Models/people_ner")
+
+
+
 
 """paisPatterns = [[{"TEXT": {"REGEX": "(?=.*pais)|(?=.*isla)"}}],
                 [{"TEXT": {"REGEX": "(?=.*republica)|(?=.*dominicana)"}, "OP": "+"}],
@@ -32,7 +39,19 @@ matcher.add("turista", turista, greedy="LONGEST")
 matcher.add("nacionalidad", nacionalidad, greedy="LONGEST")"""
 
 
+def analize(text):
+    request = [requests_.label_ for requests_ in nlp_request(text).ents]
+    residencia = [requests_.label_ for requests_ in nlp_residencia(text).ents if requests_.label_ != "year"]
+    place = [requests_.label_ for requests_ in nlp_place(text).ents ]
+    #year = [requests_.label_ for requests_ in nlp_people(text).ents if requests_.label_ == "year"]
+    return {"Request": request, "People": "people",
+            "Residencia":residencia,
+            "Place": place,
+            "Year":"year"}
+
 def process(text):
+    breakDown = analize(text)
+    print(breakDown)
     doc = nlp(text)
     request = []
     for ent in doc.ents:
