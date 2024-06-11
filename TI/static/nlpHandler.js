@@ -2,14 +2,54 @@ const mainForm =  document.querySelector("form")
 const userInput = document.getElementById("nlp_request")
 const chat = document.getElementById("chat")
 
+
+document.addEventListener("click",()=>{
+    buttons= document.querySelectorAll("#menu")
+
+    buttons.forEach(element => {
+        if (element.getAttribute("save")=="false"){
+            element.remove()
+        }else{
+            element.setAttribute("save", false);
+        }
+    });
+})
+
 const addMsgToChat = function(text,cls){
 
-    newMsg = document.createElement("h1")
-    newMsg.classList.add(cls)
+    let newMsg = document.createElement("h1")
+    newMsg.classList.add(cls,"chatMsg")
     newMsg.textContent = text
-
     chat.appendChild(newMsg)
 
+    console.log(chat.style.height)
+
+    newMsg.addEventListener("click",(e)=>{
+        menu = document.createElement("h1")
+        menu.setAttribute("id", "menu");
+        menu.setAttribute("save", true);
+
+        btn1 = document.createElement("button")
+        btn1.classList.add("cntButton")
+        btn1.textContent = "Copy"
+        btn1.style.fontSize = '10px'
+
+        btn2 = document.createElement("button")
+        btn2.classList.add("cntButton")
+        btn2.textContent = "Delete"
+        btn2.style.fontSize = '10px'
+
+        menu.style.left = e.x + 'px';
+        menu.style.top = e.y + 'px';
+
+        document.body.appendChild(menu)
+        menu.appendChild(btn1)
+        menu.appendChild(btn2)
+
+        btn1.addEventListener("click",()=>navigator.clipboard.writeText(text))
+        btn2.addEventListener("click",()=>newMsg.remove())
+
+    })
 }
 
 mainForm.addEventListener("submit",async (event)=>{
@@ -17,26 +57,41 @@ mainForm.addEventListener("submit",async (event)=>{
 
     if(userInput.value == "") return
 
-    addMsgToChat(userInput.value,"chatMsg")
+    addMsgToChat(userInput.value,"chatRequest")
 
     let request = await fetch(mainForm.action+`?nlp_request=${userInput.value}`)
     let response = await request.json()
     let nlpMsg = response.nlpResponse
     console.log(nlpMsg)
-    addMsgToChat(nlpMsg,"chatResponse")
+    createChart([1,2,3,4,5,6,7,8],["a","a","a","a","a","a","a","a"])
+    //addMsgToChat(nlpMsg,"chatResponse")
+
+    chat.scrollTo({
+        top: chat.scrollHeight,
+        behavior: 'smooth'
+      });
+
+
 })
 
-const createChart = function(){
-    labels = ["BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK","BLACK",]
+const createChart = function(dataArray,labels){
 
-    var ctx = document.getElementById('chat').getContext('2d');
+    let canvas = document.createElement("canvas")
+    canvas.style.width = "100%"
+
+    chat.appendChild(canvas)
+
+    //let labels = ["BLACK","BLACK","BLACK","BLACK"]
+
+    var ctx = canvas.getContext('2d');
+    console.log(ctx)
     var myChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
                 label: '# of Votes',
-                data: [12, 19, 3, 5, 2, 3],
+                data: dataArray,
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.2)',
                     'rgba(54, 162, 235, 0.2)',
@@ -55,9 +110,18 @@ const createChart = function(){
                 ],
                 borderWidth: 1
             }]
+        },
+        
+        options: {
+            responsive: false,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
         }
     });
 }
 
-console.log("a")
-//createChart()
+createChart([1,2,3,4,5,6,7,8],["a","a","a","a","a","a","a","a"])

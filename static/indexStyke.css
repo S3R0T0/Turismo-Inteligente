@@ -68,7 +68,7 @@ input[type="submit"]:hover {
 }
 
 .chatResponse{
-    font-size: small;
+    font-size: normal;
     font-weight: normal;
     background-color: #1f2733;
     border: 1px solid #1f2733;
