@@ -63,7 +63,16 @@ mainForm.addEventListener("submit",async (event)=>{
     let response = await request.json()
     let nlpMsg = response.nlpResponse
     console.log(nlpMsg)
-    createChart([1,2,2,3,4,5,6,7,8],["a","a","a","a","a","a","a","a"])
+
+    if (nlpMsg.Action == "List")
+    {
+        addMsgToChat(nlpMsg.Response,"chatResponse")
+    }
+    else if (nlpMsg.Action == "Graph")
+    {
+        createChart(nlpMsg.Response[1],nlpMsg.Response[0],nlpMsg.Label)
+    }
+    //createChart([1,2,2,3,4,5,6,7,8],["a","a","a","a","a","a","a","a"])
     //addMsgToChat(nlpMsg,"chatResponse")
 
     chat.scrollTo({
@@ -74,7 +83,7 @@ mainForm.addEventListener("submit",async (event)=>{
 
 })
 
-const createChart = function(dataArray,labels){
+const createChart = function(dataArray,labels,title){
 
     let canvas = document.createElement("canvas")
     canvas.style.width = "100%"
@@ -90,7 +99,7 @@ const createChart = function(dataArray,labels){
         data: {
             labels: labels,
             datasets: [{
-                label: '# of Votes',
+                label: title,
                 data: dataArray,
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.2)',
@@ -124,4 +133,4 @@ const createChart = function(dataArray,labels){
     });
 }
 
-createChart([1,2,3,4,5,6,7,8],["a","a","a","a","a","a","a","a"])
+//createChart([1,2,3,4,5,6,7,8],["a","a","a","a","a","a","a","a"])

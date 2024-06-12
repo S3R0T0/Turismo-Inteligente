@@ -8,13 +8,10 @@ nlp_residencia = spacy.load("Models/residencia_ner")
 nlp_info_v2 = spacy.load("Models/info_v2_ner")
 nlp_year = spacy.load("Models/year_ner")
 nlp_mod = spacy.load("Models/mod_ner")
-
-nlp_place = spacy.load("Models/place_ner")
+nlp_aero = spacy.load("Models/aereo_ner")
+nlp_place_v3 = spacy.load("Models/place_v3_ner")
 
 #nlp_people = spacy.load("Models/people_ner")
-
-
-
 
 """paisPatterns = [[{"TEXT": {"REGEX": "(?=.*pais)|(?=.*isla)"}}],
                 [{"TEXT": {"REGEX": "(?=.*republica)|(?=.*dominicana)"}, "OP": "+"}],
@@ -45,47 +42,34 @@ matcher.add("nacionalidad", nacionalidad, greedy="LONGEST")"""
 
 
 def analize(text):
-    request = [[requests_.label_,re.findall(r'\d+', requests_.text)[0]] for requests_ in nlp_request(text).ents]
+    request = [[requests_.label_,re.findall(r'\d+', requests_.text)] for requests_ in nlp_request(text).ents if len(requests_)]
     residencia = [[requests_.label_,requests_.text] for requests_ in nlp_residencia(text).ents if requests_.label_ != "year"]
-    place = [[requests_.label_,requests_.text] for requests_ in nlp_place(text).ents]
+    place = [[requests_.label_,requests_.text] for requests_ in nlp_place_v3(text).ents]
+    aero = [[requests_.label_,requests_.text] for requests_ in nlp_aero(text).ents]
     info = [[requests_.label_,requests_.text] for requests_ in nlp_info_v2(text).ents]
     mod = [[requests_.label_,requests_.text] for requests_ in nlp_mod(text).ents]
     year = [re.findall(r'\d+', requests_.text)[0] for requests_ in nlp_year(text).ents]
 
     #year = [requests_.label_ for requests_ in nlp_people(text).ents if requests_.label_ == "year"]
     return {"Request": request,
+            "Residencia": residencia,
+            "Place": place,
+            "aereo":aero,
             "mod" : mod,
             "People": info,
-            "Residencia":residencia,
-            "Place": place,
             "Year":year}
 
 def process(text):
     breakDown = analize(text)
-    print(breakDown)
-    doc = nlp(text)
-    request = []
+    toQuery   = queryFy(breakDown)
+    result    = query(toQuery[0])
 
-    return None
-'''
-    doc = nlp(text)
-    matches = matcher(doc)
-    matches.sort(key=lambda x: x[1])
+    print(toQuery[1])
 
-    elementos = []
-
-    last = ""
-    for i in matches:
-        if nlp.vocab[i[0]].text == "request" and not (last == "request"):
-            elementos.append(
-                {"request": [doc[i[1]:i[2]].text], "sitios": [], "provincias": [], "nacionalidad": [], "elPais": [],
-                 "turista": []})
-        else:
-            for e in elementos:
-                e[nlp.vocab[i[0]].text].append(doc[i[1]:i[2]].text)
-        last = nlp.vocab[i[0]].text
-    return "elementos"'''
-
+    if len(breakDown["Request"]) and breakDown["Request"][0][0] == "graphRequest":
+        return {"Response":createGraph(result),"Action":"Graph","Label":toQuery[1]}
+    else:
+        return {"Response": createList(result),"Action":"List"}
 
 
 def query(query):
@@ -93,24 +77,63 @@ def query(query):
         cursor.execute(query)
         return cursor.fetchall()
 
-def listTop(nlpRequest):
+def queryFy(nlpRequest):
     listSize = 10
-    year = 2023
-    month = ""
-    extranjeros = ""
     infoTable = "visitantes"
-    result = query(f"select sum(personas) as total,aereopuerto from {infoTable} where Y = {year} {month} {extranjeros} group by aereopuerto order by total desc")
-    nlpResponse = "Aqui la cantidad de visitantes en los aereopuertos princiaples:\n"
-    for index,item in enumerate(result):
-        nlpResponse += f"\n{index+1}. {item[1].title()} con {int(item[0])} visitantes"
-    return nlpResponse
+    year = nlpRequest["Year"] or [2023]
+    order = "DESC"
+    extranjeros = ""
+    aereopuerto = ""
+    residente = ""
+    label = "#De Personas "
 
-def createGraph(nlpRequest):
-    table = "visitantes"
-    year = ""
-    queryMsg = f"select * from {table} where Y = 2000"
-    result = query(queryMsg)
-    for index, item in enumerate(result):
-       pass
-       #print(item)
-    return "a"
+    print(nlpRequest)
+
+    if len(nlpRequest["People"]) and nlpRequest["People"][0][0] == "info extranjeros":
+        extranjeros = "and extranjero = 1"
+        label = "#De Extranjeros "
+    elif len(nlpRequest["People"]) and nlpRequest["People"][0][0] == "info dominicanos":
+        extranjeros = "and extranjero = 0"
+        label = "#De Dominicanos "
+
+    if len(nlpRequest["Residencia"]) and nlpRequest["Residencia"][0][0] == "residencia negativa":
+        extranjeros = "and residente = 0"
+        label += "no residentes"
+    elif len(nlpRequest["Residencia"]) and nlpRequest["Residencia"][0][0] == "residencia positiva":
+        extranjeros = "and residente = 1"
+        label += "residentes"
+
+    if len(nlpRequest["mod"]) and nlpRequest["mod"][0][0] == "mod negativo":
+        order = "ASC"
+
+    if len(nlpRequest["aereo"]):
+        aereopuerto = nlpRequest["aereo"][0][0]
+        if nlpRequest["Year"] == "":
+            year = ""
+        else:
+            year = f"and Y = {year[0]}"
+        query_txt = f"select * from {infoTable} where aereopuerto = {aereopuerto} {year} {extranjeros} {residente} ORDER BY total {order};"
+
+        print(query_txt)
+        #input()
+        return [query_txt,label]
+
+    else:
+        query_txt = f"select sum(personas) as total, aereopuerto from {infoTable} where Y = {year[0]} {extranjeros} {residente} group by aereopuerto ORDER BY total {order};"
+        print(query_txt)
+        #input()
+        return [query_txt,label]
+
+def createList(data):
+    response = ""
+    for i,item in enumerate(data):
+        response += f"{i+1} {item[1]}: {item[0]}\n"
+    return response
+
+def createGraph(data):
+    columns = []
+    datas   = []
+    for item in data:
+        columns.append(item[1])
+        datas.append(int(item[0]))
+    return [columns,datas]
