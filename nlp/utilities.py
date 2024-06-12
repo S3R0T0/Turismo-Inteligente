@@ -1,11 +1,16 @@
-import spacy
+import spacy,re
 from django.db import connection
 from spacy.matcher import Matcher
 
 nlp = spacy.load("Models/ner_model")
 nlp_request = spacy.load("Models/request_ner")
 nlp_residencia = spacy.load("Models/residencia_ner")
+nlp_info_v2 = spacy.load("Models/info_v2_ner")
+nlp_year = spacy.load("Models/year_ner")
+nlp_mod = spacy.load("Models/mod_ner")
+
 nlp_place = spacy.load("Models/place_ner")
+
 #nlp_people = spacy.load("Models/people_ner")
 
 
@@ -40,22 +45,27 @@ matcher.add("nacionalidad", nacionalidad, greedy="LONGEST")"""
 
 
 def analize(text):
-    request = [requests_.label_ for requests_ in nlp_request(text).ents]
-    residencia = [requests_.label_ for requests_ in nlp_residencia(text).ents if requests_.label_ != "year"]
-    place = [requests_.label_ for requests_ in nlp_place(text).ents ]
+    request = [[requests_.label_,re.findall(r'\d+', requests_.text)[0]] for requests_ in nlp_request(text).ents]
+    residencia = [[requests_.label_,requests_.text] for requests_ in nlp_residencia(text).ents if requests_.label_ != "year"]
+    place = [[requests_.label_,requests_.text] for requests_ in nlp_place(text).ents]
+    info = [[requests_.label_,requests_.text] for requests_ in nlp_info_v2(text).ents]
+    mod = [[requests_.label_,requests_.text] for requests_ in nlp_mod(text).ents]
+    year = [re.findall(r'\d+', requests_.text)[0] for requests_ in nlp_year(text).ents]
+
     #year = [requests_.label_ for requests_ in nlp_people(text).ents if requests_.label_ == "year"]
-    return {"Request": request, "People": "people",
+    return {"Request": request,
+            "mod" : mod,
+            "People": info,
             "Residencia":residencia,
             "Place": place,
-            "Year":"year"}
+            "Year":year}
 
 def process(text):
     breakDown = analize(text)
     print(breakDown)
     doc = nlp(text)
     request = []
-    for ent in doc.ents:
-        print(ent,ent.label_)
+
     return None
 '''
     doc = nlp(text)
@@ -101,5 +111,6 @@ def createGraph(nlpRequest):
     queryMsg = f"select * from {table} where Y = 2000"
     result = query(queryMsg)
     for index, item in enumerate(result):
-        print(item)
+       pass
+       #print(item)
     return "a"
