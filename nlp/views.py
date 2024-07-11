@@ -9,5 +9,5 @@ def homePage(request):
 def nlpRequest(request):
     intput = request.GET.get("nlp_request")
     output = utilities.process(intput)
-
+    #print(output)
     return JsonResponse({"nlpResponse": output})

@@ -2,6 +2,8 @@ const mainForm =  document.querySelector("form")
 const userInput = document.getElementById("nlp_request")
 const chat = document.getElementById("chat")
 
+console.log("HOLA JJ2")
+
 const addMsgToChat = function(text,cls){
 
     newMsg = document.createElement("h1")
