@@ -50,7 +50,7 @@ def analize(text):
     info = [[requests_.label_,requests_.text] for requests_ in nlp_info_v2(text).ents]
     mod = [[requests_.label_,requests_.text] for requests_ in nlp_mod(text).ents]
     year = [re.findall(r'\d+', requests_.text)[0] for requests_ in nlp_year(text).ents]
-    gastos = [[requests_.label_,re.findall(r'\d+', requests_.text)] for requests_ in nlp_request(text).ents if len(requests_)]
+    gastos = [[requests_.label_,re.findall(r'\d+', requests_.text)] for requests_ in nlp_gastos(text).ents if len(requests_)]
 
     #year = [requests_.label_ for requests_ in nlp_people(text).ents if requests_.label_ == "year"]
     return {"Request": request,
@@ -59,7 +59,8 @@ def analize(text):
             "aereo":aero,
             "mod" : mod,
             "People": info,
-            "Year":year}
+            "Year":year,
+            "Gastos":gastos}
 
 def process(text):
     breakDown = analize(text)
@@ -89,6 +90,10 @@ def query(query):
 def queryFy(nlpRequest):
     listSize = 20
     infoTable = "visitantes"
+    gastos = len(nlpRequest["Gastos"])
+    if gastos:
+        infoTable ="gastos"
+
     year = nlpRequest["Year"] or [2023]
     order = "DESC"
     extranjeros = ""
@@ -114,46 +119,71 @@ def queryFy(nlpRequest):
 
     if len(nlpRequest["mod"]) and nlpRequest["mod"][0][0] == "mod negativo":
         order = "ASC"
+    if infoTable == "visitantes":
+        if len(nlpRequest["aereo"]):
+            aereopuerto = "("
+            for i in nlpRequest["aereo"]:
+                print(i[0])
+                aereopuerto += f"'{i[0]}',"
+            aereopuerto = aereopuerto[:-1] + ")"
+            if len(nlpRequest["Year"]) == 0 or nlpRequest["Year"][0] == "":
+                year = ""
+            else:
+                year = f"and Y = {year[0]}"
+            query_txt = f"select sum(personas),Y,aereopuerto from {infoTable} where aereopuerto in {aereopuerto} {year} {extranjeros} {residente} GROUP BY aereopuerto, Y ORDER BY aereopuerto,Y {order};"
+            #print(query_txt)
+            return [query_txt,label]
 
-    if len(nlpRequest["aereo"]):
-        aereopuerto = "("
-        for i in nlpRequest["aereo"]:
-            print(i[0])
-            aereopuerto += f"'{i[0]}',"
-        aereopuerto = aereopuerto[:-1] + ")"
-        if len(nlpRequest["Year"]) == 0 or nlpRequest["Year"][0] == "":
-            year = ""
         else:
-            year = f"and Y = {year[0]}"
-        query_txt = f"select sum(personas),Y,aereopuerto from {infoTable} where aereopuerto in {aereopuerto} {year} {extranjeros} {residente} GROUP BY aereopuerto, Y ORDER BY aereopuerto,Y {order};"
-        #print(query_txt)
-        return [query_txt,label]
-
+            query_txt = f"select sum(personas) as total, aereopuerto from {infoTable} where Y = {year[0]} {extranjeros} {residente} group by aereopuerto ORDER BY total {order};"
+            #print(query_txt)
+            return [query_txt,label]
     else:
-        query_txt = f"select sum(personas) as total, aereopuerto from {infoTable} where Y = {year[0]} {extranjeros} {residente} group by aereopuerto ORDER BY total {order};"
-        #print(query_txt)
-        return [query_txt,label]
-
+        if len(nlpRequest["aereo"]):
+            aereopuerto = "("
+            for i in nlpRequest["aereo"]:
+                print(i[0])
+                aereopuerto += f"'{i[0]}',"
+            aereopuerto = aereopuerto[:-1] + ")"
+            if len(nlpRequest["Year"]) == 0 or nlpRequest["Year"][0] == "":
+                year = ""
+            else:
+                year = f"and Yer = {year[0]}"
+            query_txt = f"select sum(gastoTotal),Yer,aereopuerto from (select sum(personas)*gastoPP as gastoTotal,a.Y as yer,aereopuerto from visitantes as a inner join (select avg(gasto*estadia) as gastoPP,Y from gastos group by Y) as b on a.Y = b.Y group by yer,aereopuerto,a.residente,a.extranjero) as totalGastos where aereopuerto in {aereopuerto} {year} group by yer,aereopuerto order by aereopuerto,Yer"
+            print(query_txt)
+            return [query_txt, label]
+        else:
+            year = f"Yer = 2023"
+            query_txt = f"select sum(gastoTotal) as total,Yer,aereopuerto from (select sum(personas)*gastoPP as gastoTotal,a.Y as yer,aereopuerto from visitantes as a inner join (select avg(gasto*estadia) as gastoPP,Y from gastos group by Y) as b on a.Y = b.Y group by yer,aereopuerto,a.residente,a.extranjero) as totalGastos where {year} group by aereopuerto ORDER BY total {order};"
+             #print(query_txt)
+            return [query_txt,label]
 def createList(data,year):
     response = f"Datos del año {year}\n"
     last = ""
     offset = 0
     for i,item in enumerate(data):
-        if {item[2]} != last:
+        print(len(item))
+        if len(item) >= 3 and item[2] != last:
             response += "\nEn " + item[2] + "\n"
             offset = i
+            last = item[2]
         response += f"{item[1]}: {item[0]}\n"
-        last = {item[2]}
+
     return response
 
 def createGraph(data,year):
     datas   = {}
     # provincia 2, year 1, data 0
+    print("ESTO ESTOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+    print(data)
+    print("----------------------------------------------------------------------")
     for item in data:
-        if not (item[2] in datas):
-            datas[item[2]] = []
-        print([int(item[0]),item[1]])
-        datas[item[2]].append([int(item[0]),item[1]])
-
-    print(datas)
+        if len(item) >= 3:
+            if not (item[2] in datas):
+                datas[item[2]] = []
+            datas[item[2]].append([int(item[0]),item[1]])
+        else:
+            if not (item[1] in datas):
+                datas[item[1]] = []
+            datas[item[1]].append([int(item[0]),"Personas"])
     return datas

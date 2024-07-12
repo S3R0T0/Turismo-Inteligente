@@ -114,8 +114,8 @@ const generateColor = function(labels,alpha){
 
 const generateData = function(data){
     
-    datas = []
-    year = []
+    let datas = []
+    let year = []
     for (let key in data) {
 
         year = []
